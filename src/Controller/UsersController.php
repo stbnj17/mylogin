@@ -2,6 +2,7 @@
 namespace App\Controller;
 
 use App\Controller\AppController;
+use Cake\Event\Event;
 
 /**
  * Users Controller
@@ -102,5 +103,43 @@ class UsersController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    //Login
+    public function login() {
+        if ($this->request->is('post')) {
+            $user = $this->Auth->identify();
+            if ($user) {
+                $this->Auth->setUser($user);
+                return $this->redirect(['controller' => 'posts']);
+            }
+            // Bad Login
+            $this->Flash->error('Login Incorrecto.');
+        }
+    }
+
+    // Logout
+    public function logout() {
+        $this->Flash->success('Has salido de la Sesión.');
+        return $this->redirect($this->Auth->logout());
+    }
+
+    public function register() {
+        $user = $this->Users->newEntity();
+        if ($this->request->is('post')) {
+            $user = $this->Users->patchEntity($user, $this->request->data);
+            if ($this->Users->save($user)) {
+                $this->Flash->success('Ha sido Registrado.');
+                return $this->redirect(['action' => 'login']);
+            } else {
+                $this->Flash->error('No ha sido Registrado.');
+            }
+        }
+        $this->set(compact('user'));
+        $this->set('_serialize', ['user']);
+    }
+
+    public function beforeFilter(Event $event) {
+        $this->Auth->allow(['Register']);
     }
 }
